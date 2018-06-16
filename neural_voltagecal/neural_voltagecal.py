@@ -24,7 +24,7 @@ momentum = 0.9
 epoch_num = 200
 log_num = 400
 batch_size = 8
-arch = 'Convnet'
+arch = 'FCnet'
 if arch == None:
     arch = 'FCnet'
 
