@@ -10,7 +10,7 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.optim as optim
 import utils
-from network import FCnet,Convnet
+from network import FCnet,Convnet,FCConvnet
 import time
 import matplotlib.pyplot as plt
 import os
@@ -21,10 +21,10 @@ import math
 learning_rate = 0.0005
 learning_rate_decay = 0
 momentum = 0.9
-epoch_num = 200
+epoch_num = 100
 log_num = 400
 batch_size = 8
-arch = 'FCnet'
+arch = 'Convnet'
 if arch == None:
     arch = 'FCnet'
 
@@ -39,6 +39,9 @@ def weight_init(m):
         print(m.kernel_size)
         n = m.kernel_size[0]*m.out_channels
         m.weight.data.normal_(0,math.sqrt(2./n))
+    if isinstance(m,nn.Conv2d):
+        n = m.kernel_size[0]*m.kernel_size[1]*m.out_channels
+        m.weight.data.normal_(0,math.sqrt(2./n))
     if isinstance(m,nn.BatchNorm1d):
         m.weight.data.fill_(1)
         m.bias.data.zero_()
@@ -49,6 +52,8 @@ def train():
     dataloader = torch.utils.data.DataLoader(dataset,batch_size=batch_size,shuffle=True)
     if arch=='Convnet':
         net = Convnet()
+    elif arch=='FCConvnet':
+        net = FCConvnet()
     else:
         net = FCnet()
     print(net)
@@ -68,7 +73,7 @@ def train():
             Q = data[1]
             V = data[2]
             if arch=='Convnet':
-                Q,V = Q.view(batch_size,1,-1),V.view(batch_size,1,-1)
+                Q = Q.view(batch_size,1,-1)
             Q,V = Variable(Q),Variable(V)
             optimizer.zero_grad()
             Vout = net(Q)
@@ -87,6 +92,7 @@ def train():
     torch.save(net.state_dict(),save_model_path)
     print('\033[0;32m Done! Train model saved at:'+save_model_path)
     plt.plot(range(len(loss_list)),loss_list)
+    plt.show()
     np.save('loss_list.npy',np.array(loss_list))
-    os.system("pause")
+    m = input("finish training!")
 train()

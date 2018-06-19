@@ -11,9 +11,9 @@ import scipy.io
 import os
 import random
 import numpy as np
-
+#voltage_nodes=[0,5,11,22,24,28]
 class Mydataset(utils_data.Dataset):
-    def __init__(self, data_dir='../data/train',shuffle=True,norm=True,voltage_nodes=[0,5,11,22,24,28]):
+    def __init__(self, data_dir='../data/train',shuffle=True,norm=True,voltage_nodes=[22]):
         self.__dir = data_dir
         self.__P = scipy.io.loadmat(os.path.join(self.__dir,'Pout.mat'))['Pout']
         self.__Q = scipy.io.loadmat(os.path.join(self.__dir,'Qout.mat'))['Qout']

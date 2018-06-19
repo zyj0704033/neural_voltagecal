@@ -44,7 +44,7 @@ class Convnet(nn.Module):
         #32*32
         self.fc1 = nn.Linear(1024,100)
         self.relu4 = nn.ReLU()
-        self.fc2 = nn.Linear(100,6)
+        self.fc2 = nn.Linear(100,1)
     def forward(self,x):
         y = self.bn1(self.conv1(x))
         y = self.relu1(y)
@@ -55,6 +55,35 @@ class Convnet(nn.Module):
         y = y.view(-1,1024)
         y = self.fc1(y)
         y = self.relu4(y)
+        y = self.fc2(y)
+
+        return y
+
+
+class FCConvnet(nn.Module):
+    def __init__(self):
+        super(FCConvnet,self).__init__()
+        self.fc0 = nn.Linear(32,225)
+        self.conv1 = nn.Conv2d(1,16,5,padding=2)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(16,32,5,padding=2)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(32,32,5,padding=2)
+        self.bn3 = nn.BatchNorm2d(32)
+        self.fc1 = nn.Linear(7200,500)
+        self.fc2 = nn.Linear(500,6)
+        self.relu = nn.ReLU()
+    def forward(self,x):
+        y = self.relu(self.fc0(x))
+        y = y.view(-1,1,15,15)
+        y = self.conv1(y)
+        y = self.relu(self.bn1(y))
+        y = self.conv2(y)
+        y = self.relu(self.bn2(y))
+        y = self.conv3(y)
+        y = self.relu(self.bn3(y))
+        y = y.view(-1,7200)
+        y = self.relu(self.fc1(y))
         y = self.fc2(y)
 
         return y
