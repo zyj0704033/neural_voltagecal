@@ -24,6 +24,7 @@ momentum = 0.9
 epoch_num = 100
 log_num = 400
 batch_size = 8
+lr_decay = range(20,100,20)
 arch = 'Convnet'
 if arch == None:
     arch = 'FCnet'
@@ -50,6 +51,9 @@ def weight_init(m):
 def train():
     dataset = utils.Mydataset()
     dataloader = torch.utils.data.DataLoader(dataset,batch_size=batch_size,shuffle=True)
+    trainstat = dataset.getstat()
+    testset = utils.testdataset(stat=trainstat)
+    testloader = torch.utils.data.DataLoader(testset)
     if arch=='Convnet':
         net = Convnet()
     elif arch=='FCConvnet':
@@ -61,6 +65,7 @@ def train():
     criterion = nn.MSELoss()
     optimizer = optim.SGD(net.parameters(),lr=learning_rate,weight_decay=learning_rate_decay)
     loss_list = []
+    val_list = []
     print('\033[1;32m start to train the network!\033[0m')
     for epoch in range(epoch_num):
         
@@ -83,16 +88,43 @@ def train():
             optimizer.step()
             if i%log_num==0:
                 print('\033[1;33m epoch number: \033[0m%d;  \033[1;33m iteration number: \033[0m%d;  \
-                \033[1;33m loss: \033[0m%f'%(epoch,i,loss.data[0]))
+\033[1;33m loss: \033[0m%f   \033[1;33m learning_rate::  \033[0m%f'%(epoch,i,loss.data[0],optimizer.param_groups[0]['lr']))
                 print(Vout.data[0].numpy())
                 print(V.data[0].numpy())
+        if epoch in lr_decay:
+            optimizer.param_groups[0]['lr'] *= 0.5
+        '''
+        Test
+        '''
+        net.eval()
+        sumloss = 0.0
+        for data in testloader:
+            P,Q,V = data[0],data[1],data[2]
+            if arch=='Convnet':
+                Q = Q.view(1,1,-1)
+            Q,V = Variable(Q),Variable(V)
+            Vout = net(Q)
+            loss = criterion(Vout,V)
+            sumloss += loss.data[0]
+        print('\033[1;32m epoch number: \033[0m%d;   \
+                \033[1;32m test_loss: \033[0m%f'%(epoch,sumloss/len(testloader)))
+        
+        val_list.append(sumloss/len(testloader))
+        
+        
+        
         
     #save model
     save_model_path = '../data/model/'+arch+'_'+'epoch_'+str(epoch_num)+'_'+str(time.ctime()).replace(' ','_')+'.model'
     torch.save(net.state_dict(),save_model_path)
     print('\033[0;32m Done! Train model saved at:'+save_model_path)
+    fig = plt.figure(1)
     plt.plot(range(len(loss_list)),loss_list)
     plt.show()
+    fig = plt.figure(2)
+    plt.plot(range(len(val_list)),val_list)
+    plt.show()
+    np.save('val_loss.npy',np.array(val_list))
     np.save('loss_list.npy',np.array(loss_list))
     m = input("finish training!")
 train()

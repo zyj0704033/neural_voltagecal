@@ -44,5 +44,5 @@ for i in range(len(Qn)):
 
 result = predict*V_std[voltage_nodes]+V_mean[voltage_nodes]
 plt.figure(1)
-plt.plot(V[:,1])
-plt.plot(result[:,1])
+plt.plot(V[:,2])
+plt.plot(result[:,2])
